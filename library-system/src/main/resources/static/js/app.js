@@ -322,7 +322,9 @@ function renderBooks(books) {
         return;
     }
 
-    elements.booksGrid.innerHTML = books.map(book => `
+    elements.booksGrid.innerHTML = books.map(book => {
+        const available = book.availableCopies > 0;
+        return `
         <div class="book-card">
             <div class="book-header">
                 <h3 class="book-title">${escapeHtml(book.title)}</h3>
@@ -331,13 +333,62 @@ function renderBooks(books) {
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     Författare ID: ${book.authorId || 'Okänd'}
                 </div>
+                <div style="font-size: 0.8rem; margin-top: 8px; font-weight: 600; color: ${available ? 'var(--success)' : 'var(--danger)'};">
+                    ${available ? `Tillgänglig (${book.availableCopies} ex)` : 'Slutsåld / Utlånad'}
+                </div>
             </div>
             <div class="book-actions">
-                <span class="badge">ID: ${book.id}</span>
+                <button class="btn btn-primary btn-sm" onclick="borrowBookDirect(${book.id}, '${escapeJsString(book.title)}')" ${!available ? 'disabled' : ''}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                    Låna bok
+                </button>
                 <button class="btn btn-danger btn-sm admin-only" onclick="deleteBook(${book.id})">Radera</button>
             </div>
         </div>
-    `).join('');
+    `}).join('');
+}
+
+async function borrowBookDirect(bookId, bookTitle) {
+    if (!state.auth.isLoggedIn) {
+        showToast('Du måste vara inloggad för att låna en bok.', 'warning');
+        openModal(elements.loginModal);
+        return;
+    }
+
+    try {
+        let userId = state.auth.userId;
+        if (!userId) {
+            const userRes = await fetchApi(`/users/${encodeURIComponent(state.auth.username)}`);
+            if (userRes.ok) {
+                const userObj = await userRes.json();
+                userId = userObj.id;
+                state.auth.userId = userId;
+            } else {
+                showToast('Kunde inte hämta användarinformation för att skapa lån', 'error');
+                return;
+            }
+        }
+
+        const res = await fetchApi(`/loans?userId=${userId}&bookId=${bookId}`, {
+            method: 'POST'
+        });
+
+        if (res.ok) {
+            showToast(`Du har lånat "${bookTitle}"! Tack och trevlig läsning.`, 'success');
+            loadBooks();
+            loadMyLoans();
+        } else {
+            const errorText = await res.text();
+            showToast(errorText || 'Kunde inte låna boken', 'error');
+        }
+    } catch (err) {
+        showToast('Fel vid skapande av lån', 'error');
+    }
+}
+
+function escapeJsString(str) {
+    if (!str) return '';
+    return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
 async function addBook(title, isbn, authorId) {

@@ -33,6 +33,13 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
+                .exceptionHandling(eh -> eh
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                        })
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/favicon.ico", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/auth/register").permitAll()
@@ -41,7 +48,7 @@ public class SecurityConfig {
                         .requestMatchers("/books/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/authors/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/users/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/loans/**").hasRole("ADMIN")
+                        .requestMatchers("/loans/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().hasRole("ADMIN")
                 )
                 .httpBasic(Customizer.withDefaults());
