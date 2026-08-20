@@ -96,6 +96,7 @@ public class LoanService {
 
     }
 
+    @Transactional
     public void extendLoan(long loanId) {
         Loan loan = loanRepository.findById(loanId).orElseThrow(() -> new RuntimeException("Failed to find the loan with ID: " + loanId + ""));
         if (loan.getReturnedDate() != null) {
