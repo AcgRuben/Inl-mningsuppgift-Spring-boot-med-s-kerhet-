@@ -26,11 +26,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("User not found with email: " + email);
         }
 
+        String role = user.getRole() != null ? user.getRole() : "USER";
+        if (!role.startsWith("ROLE_")) {
+            role = "ROLE_" + role;
+        }
+
         // Bygg UserDetails med email, hashat lösenord och roll
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
                 .password(user.getPassword())
-                .authorities("ROLE_" + user.getRole()) // prefix "ROLE_" viktigt
+                .authorities(role)
                 .build();
     }
 }

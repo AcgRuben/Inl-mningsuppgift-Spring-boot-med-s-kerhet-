@@ -199,6 +199,7 @@ async function handleRegister(email, password, role) {
             closeModal(elements.registerModal);
             openModal(elements.loginModal);
             document.getElementById('loginEmail').value = email;
+            document.getElementById('loginPassword').value = password;
         } else {
             showToast(text || 'Registreringen misslyckades', 'error');
         }

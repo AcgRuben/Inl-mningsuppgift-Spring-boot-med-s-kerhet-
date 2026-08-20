@@ -251,13 +251,14 @@
                 </div>
                 <div class="form-group">
                     <label for="regPassword">Lösenord</label>
-                    <input type="password" id="regPassword" class="form-control" required placeholder="Minst 6 tecken">
+                    <input type="password" id="regPassword" class="form-control" required placeholder="Minst 8 tecken (t.ex. Secret123)" minlength="8">
+                    <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">Krav: Minst 8 tecken, måste innehålla både bokstäver och siffror.</small>
                 </div>
                 <div class="form-group">
                     <label for="regRole">Roll</label>
                     <select id="regRole" class="form-select">
-                        <option value="ROLE_USER">USER (Vanlig användare)</option>
-                        <option value="ROLE_ADMIN">ADMIN (Administratör)</option>
+                        <option value="USER">USER (Vanlig användare)</option>
+                        <option value="ADMIN">ADMIN (Administratör)</option>
                     </select>
                 </div>
                 <div class="form-actions">

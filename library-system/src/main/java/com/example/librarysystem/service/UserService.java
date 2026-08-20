@@ -59,6 +59,9 @@ public class UserService {
 
 
     public void register(User user) {
+        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be empty");
+        }
 
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email already registered");
@@ -74,10 +77,17 @@ public class UserService {
         // Kryptera lösenord
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
+        if (user.getRole() == null || user.getRole().trim().isEmpty()) {
+            user.setRole("USER");
+        } else {
+            user.setRole(user.getRole().replace("ROLE_", ""));
+        }
 
-        user.setRole("USER");
+        if (user.getFirstName() == null || user.getFirstName().trim().isEmpty()) {
+            user.setFirstName(user.getEmail());
+        }
+
         user.setEnabled(true);
-
         userRepository.save(user);
     }
 
