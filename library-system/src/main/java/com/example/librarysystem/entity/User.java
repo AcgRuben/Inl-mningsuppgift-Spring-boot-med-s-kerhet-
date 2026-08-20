@@ -59,6 +59,9 @@ public class User {
     public Long getId() {return userId;}
     public void setId(Long id) {this.userId = id;}
 
+    public Long getUserId() {return userId;}
+    public void setUserId(Long userId) {this.userId = userId;}
+
     public String getFirstName() {return firstName;}
     public void setFirstName(String firstName) {this.firstName = firstName;}
 

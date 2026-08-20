@@ -34,8 +34,25 @@ public class Loan {
 
     public Loan() {}
 
+    public Long getId() {return loanId;}
     public Long getLoanId() {return loanId;}
     public void setLoanId(Long loanId) {this.loanId = loanId;}
+
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
+    }
+
+    public Long getBookId() {
+        return book != null ? book.getId() : null;
+    }
+
+    public String getBookTitle() {
+        return book != null ? book.getTitle() : null;
+    }
+
+    public boolean isReturned() {
+        return returnedDate != null;
+    }
 
     public User getUser() {
         return user;

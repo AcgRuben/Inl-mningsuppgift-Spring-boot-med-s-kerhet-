@@ -361,12 +361,17 @@ async function borrowBookDirect(bookId, bookTitle) {
             const userRes = await fetchApi(`/users/${encodeURIComponent(state.auth.username)}`);
             if (userRes.ok) {
                 const userObj = await userRes.json();
-                userId = userObj.id;
+                userId = userObj.id || userObj.userId;
                 state.auth.userId = userId;
             } else {
                 showToast('Kunde inte hämta användarinformation för att skapa lån', 'error');
                 return;
             }
+        }
+
+        if (!userId) {
+            showToast('Ogiltigt användar-ID. Vänligen logga in igen.', 'error');
+            return;
         }
 
         const res = await fetchApi(`/loans?userId=${userId}&bookId=${bookId}`, {
@@ -609,8 +614,10 @@ async function loadMyLoans() {
         const userRes = await fetchApi(`/users/${encodeURIComponent(state.auth.username)}`);
         if (userRes.ok) {
             const userObj = await userRes.json();
-            if (userObj && userObj.id) {
-                const loansRes = await fetchApi(`/users/${userObj.id}/loans`);
+            const uId = userObj ? (userObj.id || userObj.userId) : null;
+            if (uId) {
+                state.auth.userId = uId;
+                const loansRes = await fetchApi(`/users/${uId}/loans`);
                 if (loansRes.ok) {
                     const loans = await loansRes.json();
                     renderMyLoans(loans);
@@ -625,24 +632,29 @@ async function loadMyLoans() {
 }
 
 function renderMyLoans(loans) {
-    if (loans.length === 0) {
+    if (!loans || loans.length === 0) {
         elements.myLoansList.innerHTML = '<p class="text-muted">Du har inga aktiva lån för närvarande.</p>';
         return;
     }
 
-    elements.myLoansList.innerHTML = loans.map(loan => `
-        <div class="card" style="margin-bottom: 10px; padding: 12px 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+    elements.myLoansList.innerHTML = loans.map(loan => {
+        const loanIdVal = loan.id || loan.loanId;
+        const bookTitleVal = loan.bookTitle || (loan.book ? loan.book.title : null) || `Bok #${loan.bookId || (loan.book ? loan.book.id : 'N/A')}`;
+        const isRet = loan.returned || loan.returnedDate != null;
+
+        return `
+        <div class="card" style="margin-bottom: 10px; padding: 14px 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div>
-                    <strong>Lån #${loan.id}</strong> (Bok ID: ${loan.bookId || (loan.book ? loan.book.id : 'N/A')})
-                    <div style="font-size: 0.8rem;" class="text-muted">Förfallodatum: ${loan.dueDate || 'Ej angivet'}</div>
+                    <h4 style="font-size: 0.95rem; color: #fff; margin-bottom: 2px;">${escapeHtml(bookTitleVal)}</h4>
+                    <div style="font-size: 0.8rem;" class="text-muted">Låne-ID: #${loanIdVal} | Förfallodatum: ${loan.dueDate ? loan.dueDate.split('T')[0] : 'Ej angivet'}</div>
                 </div>
-                <span class="badge ${loan.returned ? 'success' : 'warning'}">
-                    ${loan.returned ? 'Återlämnad' : 'Aktivt'}
+                <span class="badge ${isRet ? 'success' : 'warning'}">
+                    ${isRet ? 'Återlämnad' : 'Aktivt lån'}
                 </span>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 /* ==========================================================================
