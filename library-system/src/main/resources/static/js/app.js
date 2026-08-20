@@ -184,12 +184,16 @@ async function handleLogin(username, password) {
     }
 }
 
-async function handleRegister(email, password, role) {
+async function handleRegister(firstName, lastName, email, password, role) {
     try {
+        const payload = { email, password, role };
+        if (firstName && firstName.trim()) payload.firstName = firstName.trim();
+        if (lastName && lastName.trim()) payload.lastName = lastName.trim();
+
         const response = await fetch('/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, role })
+            body: JSON.stringify(payload)
         });
 
         const text = await response.text();
@@ -628,10 +632,12 @@ function setupEventListeners() {
     // Register Form Submit
     elements.registerForm.addEventListener('submit', (e) => {
         e.preventDefault();
+        const fName = document.getElementById('regFirstName').value;
+        const lName = document.getElementById('regLastName').value;
         const email = document.getElementById('regEmail').value;
         const pass = document.getElementById('regPassword').value;
         const role = document.getElementById('regRole').value;
-        handleRegister(email, pass, role);
+        handleRegister(fName, lName, email, pass, role);
     });
 
     // Book Actions

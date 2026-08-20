@@ -84,7 +84,12 @@ public class UserService {
         }
 
         if (user.getFirstName() == null || user.getFirstName().trim().isEmpty()) {
-            user.setFirstName(user.getEmail());
+            String defaultFirstName = user.getEmail().contains("@") ? user.getEmail().split("@")[0] : user.getEmail();
+            user.setFirstName(defaultFirstName);
+        }
+
+        if (user.getLastName() == null || user.getLastName().trim().isEmpty()) {
+            user.setLastName("User");
         }
 
         user.setEnabled(true);

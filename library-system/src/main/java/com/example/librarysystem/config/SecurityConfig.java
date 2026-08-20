@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/favicon.ico", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/favicon.ico", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/auth/register").permitAll()
                         .requestMatchers("/auth/admin-page").hasRole("ADMIN")
                         .requestMatchers("/auth/user-page").hasAnyRole("USER","ADMIN")
