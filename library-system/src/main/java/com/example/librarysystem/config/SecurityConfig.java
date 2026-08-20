@@ -31,12 +31,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/favicon.ico", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/auth/register").permitAll()
                         .requestMatchers("/auth/admin-page").hasRole("ADMIN")
                         .requestMatchers("/auth/user-page").hasAnyRole("USER","ADMIN")
                         .requestMatchers("/books/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/authors/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/users/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/loans/**").hasRole("ADMIN")
                         .anyRequest().hasRole("ADMIN")
                 )

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bibliotekssystem - Spring Boot Security</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header / Navbar -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                </div>
+                <div class="brand-text">
+                    <h1>Bibliotekssystem</h1>
+                    <span class="brand-tag">Spring Boot 3 + Security</span>
+                </div>
+            </div>
+
+            <div class="nav-controls">
+                <div id="userInfo" class="user-info hidden">
+                    <span class="avatar" id="userAvatar">U</span>
+                    <div class="user-details">
+                        <span class="username" id="displayUsername">User</span>
+                        <span class="role-badge" id="displayRole">USER</span>
+                    </div>
+                    <button class="btn btn-outline btn-sm" id="logoutBtn">Logga ut</button>
+                </div>
+                <div id="authButtons" class="auth-actions">
+                    <button class="btn btn-secondary btn-sm" id="openLoginModalBtn">Logga in</button>
+                    <button class="btn btn-primary btn-sm" id="openRegisterModalBtn">Registrera konto</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="app-nav">
+            <button class="nav-tab active" data-tab="books">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                Böcker
+            </button>
+            <button class="nav-tab" data-tab="authors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Författare
+            </button>
+            <button class="nav-tab" data-tab="loans">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg>
+                Lån (Admin)
+            </button>
+            <button class="nav-tab" data-tab="my-loans">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Mina Lån & Profil
+            </button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- TAB: BOOKS -->
+            <section id="tab-books" class="tab-page active">
+                <div class="section-header">
+                    <div class="header-titles">
+                        <h2>Bokskatalog</h2>
+                        <p>Utforska och sök bland bibliotekets tillgängliga böcker</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary admin-only" id="openAddBookBtn">+ Lägg till bok</button>
+                    </div>
+                </div>
+
+                <!-- Filters & Search Bar -->
+                <div class="filter-card">
+                    <div class="search-box">
+                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" id="bookSearchInput" placeholder="Sök efter titel eller författare...">
+                        <button class="btn btn-secondary btn-sm" id="bookSearchBtn">Sök</button>
+                    </div>
+                    <div class="sort-controls">
+                        <label for="sortBySelect">Sortera efter:</label>
+                        <select id="sortBySelect" class="form-select">
+                            <option value="title">Titel</option>
+                            <option value="isbn">ISBN</option>
+                            <option value="id">ID</option>
+                        </select>
+                        <select id="sortDirSelect" class="form-select">
+                            <option value="asc">Stigande (A-Ö)</option>
+                            <option value="desc">Fallande (Ö-A)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Books Grid -->
+                <div id="booksGrid" class="cards-grid">
+                    <div class="loading-spinner">Hämtar böcker...</div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination-bar" id="booksPagination">
+                    <button class="btn btn-outline btn-sm" id="prevPageBtn" disabled>&laquo; Föregående</button>
+                    <span class="page-indicator" id="pageIndicator">Sida 1 av 1</span>
+                    <button class="btn btn-outline btn-sm" id="nextPageBtn" disabled>Nästa &raquo;</button>
+                </div>
+            </section>
+
+            <!-- TAB: AUTHORS -->
+            <section id="tab-authors" class="tab-page">
+                <div class="section-header">
+                    <div class="header-titles">
+                        <h2>Författare</h2>
+                        <p>Sök och registrera författare i systemet</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary admin-only" id="openAddAuthorBtn">+ Lägg till författare</button>
+                    </div>
+                </div>
+
+                <div class="filter-card">
+                    <div class="search-box">
+                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" id="authorSearchInput" placeholder="Sök författare efter efternamn...">
+                        <button class="btn btn-secondary btn-sm" id="authorSearchBtn">Sök</button>
+                    </div>
+                    <button class="btn btn-outline btn-sm" id="resetAuthorsBtn">Visa alla</button>
+                </div>
+
+                <div id="authorsGrid" class="cards-grid">
+                    <div class="loading-spinner">Hämtar författare...</div>
+                </div>
+            </section>
+
+            <!-- TAB: LOANS (Admin) -->
+            <section id="tab-loans" class="tab-page">
+                <div class="section-header">
+                    <div class="header-titles">
+                        <h2>Lånehantering (Admin)</h2>
+                        <p>Hantera aktiva lån, registrera nya lån och bokreturer</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary admin-only" id="openCreateLoanBtn">+ Skapa nytt lån</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Aktiva Lån i Systemet</h3>
+                        <button class="btn btn-outline btn-sm" id="refreshLoansBtn">Uppdatera</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Låne-ID</th>
+                                    <th>Användar-ID</th>
+                                    <th>Bok-ID</th>
+                                    <th>Lånedatum</th>
+                                    <th>Förfallodatum</th>
+                                    <th>Återlämnad</th>
+                                    <th>Åtgärder</th>
+                                </tr>
+                            </thead>
+                            <tbody id="loansTableBody">
+                                <tr><td colspan="7" class="text-center">Hämtar lån...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: MY LOANS & PROFILE -->
+            <section id="tab-my-loans" class="tab-page">
+                <div class="section-header">
+                    <div class="header-titles">
+                        <h2>Mina Lån & Profil</h2>
+                        <p>Se ditt konto och dina registrerade boklån</p>
+                    </div>
+                </div>
+
+                <div class="profile-grid">
+                    <div class="card profile-card">
+                        <h3>Kontoinformation</h3>
+                        <div class="profile-field">
+                            <label>E-post / Användarnamn:</label>
+                            <span id="profileEmail">Ej inloggad</span>
+                        </div>
+                        <div class="profile-field">
+                            <label>Roll i systemet:</label>
+                            <span id="profileRoleBadge" class="badge">EJ INLOGGAD</span>
+                        </div>
+                        <div class="profile-field">
+                            <label>Status:</label>
+                            <span class="status-indicator online"></span> Aktiv session
+                        </div>
+                    </div>
+
+                    <div class="card my-loans-card">
+                        <h3>Dina Aktiva Lån</h3>
+                        <div id="myLoansList" class="my-loans-container">
+                            <p class="text-muted">Logga in för att se dina lån.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="app-footer">
+            <p>&copy; 2026 Bibliotekssystem | Spring Boot Security & JPA SQLite</p>
+        </footer>
+    </div>
+
+    <!-- MODAL: LOGIN -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Logga in</h3>
+                <button class="close-btn" data-close="loginModal">&times;</button>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">E-post / Användarnamn</label>
+                    <input type="text" id="loginEmail" class="form-control" required placeholder="t.ex. admin@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Lösenord</label>
+                    <input type="password" id="loginPassword" class="form-control" required placeholder="••••••••">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" data-close="loginModal">Avbryt</button>
+                    <button type="submit" class="btn btn-primary">Logga in</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: REGISTER -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Registrera Nytt Konto</h3>
+                <button class="close-btn" data-close="registerModal">&times;</button>
+            </div>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="regEmail">E-postadress</label>
+                    <input type="email" id="regEmail" class="form-control" required placeholder="namn@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Lösenord</label>
+                    <input type="password" id="regPassword" class="form-control" required placeholder="Minst 6 tecken">
+                </div>
+                <div class="form-group">
+                    <label for="regRole">Roll</label>
+                    <select id="regRole" class="form-select">
+                        <option value="ROLE_USER">USER (Vanlig användare)</option>
+                        <option value="ROLE_ADMIN">ADMIN (Administratör)</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" data-close="registerModal">Avbryt</button>
+                    <button type="submit" class="btn btn-primary">Registrera</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD BOOK (Admin) -->
+    <div id="addBookModal" class="modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Lägg till ny bok</h3>
+                <button class="close-btn" data-close="addBookModal">&times;</button>
+            </div>
+            <form id="addBookForm">
+                <div class="form-group">
+                    <label for="bookTitle">Titel</label>
+                    <input type="text" id="bookTitle" class="form-control" required placeholder="t.ex. Harry Potter">
+                </div>
+                <div class="form-group">
+                    <label for="bookIsbn">ISBN</label>
+                    <input type="text" id="bookIsbn" class="form-control" required placeholder="t.ex. 978-0545010221">
+                </div>
+                <div class="form-group">
+                    <label for="bookAuthorId">Författar-ID (Valfritt)</label>
+                    <input type="number" id="bookAuthorId" class="form-control" placeholder="1">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" data-close="addBookModal">Avbryt</button>
+                    <button type="submit" class="btn btn-primary">Spara bok</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD AUTHOR (Admin) -->
+    <div id="addAuthorModal" class="modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Lägg till författare</h3>
+                <button class="close-btn" data-close="addAuthorModal">&times;</button>
+            </div>
+            <form id="addAuthorForm">
+                <div class="form-group">
+                    <label for="authorFirstName">Förnamn</label>
+                    <input type="text" id="authorFirstName" class="form-control" required placeholder="t.ex. Astrid">
+                </div>
+                <div class="form-group">
+                    <label for="authorLastName">Efternamn</label>
+                    <input type="text" id="authorLastName" class="form-control" required placeholder="t.ex. Lindgren">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" data-close="addAuthorModal">Avbryt</button>
+                    <button type="submit" class="btn btn-primary">Spara författare</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CREATE LOAN (Admin) -->
+    <div id="createLoanModal" class="modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Skapa Nytt Lån</h3>
+                <button class="close-btn" data-close="createLoanModal">&times;</button>
+            </div>
+            <form id="createLoanForm">
+                <div class="form-group">
+                    <label for="loanUserId">Användar-ID</label>
+                    <input type="number" id="loanUserId" class="form-control" required placeholder="t.ex. 1">
+                </div>
+                <div class="form-group">
+                    <label for="loanBookId">Bok-ID</label>
+                    <input type="number" id="loanBookId" class="form-control" required placeholder="t.ex. 1">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" data-close="createLoanModal">Avbryt</button>
+                    <button type="submit" class="btn btn-primary">Skapa Lån</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
