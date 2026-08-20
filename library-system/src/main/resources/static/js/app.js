@@ -150,24 +150,33 @@ async function fetchApi(endpoint, options = {}) {
    AUTHENTICATION LOGIC
    ========================================================================== */
 async function handleLogin(username, password) {
-    state.auth.username = username;
-    state.auth.password = password;
-    state.auth.isLoggedIn = true;
+    const credentials = btoa(`${username}:${password}`);
 
-    // Test credentials by attempting access to user-page and admin-page
     try {
-        const adminTest = await fetchApi('/auth/admin-page');
-        if (adminTest.ok) {
+        // First check credentials against /auth/user-page (valid for both USER and ADMIN)
+        const userRes = await fetch('/auth/user-page', {
+            headers: { 'Authorization': `Basic ${credentials}` }
+        });
+
+        if (!userRes.ok) {
+            throw new Error('Invalid credentials');
+        }
+
+        state.auth.username = username;
+        state.auth.password = password;
+        state.auth.isLoggedIn = true;
+
+        // Check if user has ADMIN role
+        const adminRes = await fetch('/auth/admin-page', {
+            headers: { 'Authorization': `Basic ${credentials}` }
+        });
+
+        if (adminRes.ok) {
             state.auth.role = 'ROLE_ADMIN';
             showToast(`Välkommen tillbaka, ${username} (Admin)`, 'success');
         } else {
-            const userTest = await fetchApi('/auth/user-page');
-            if (userTest.ok) {
-                state.auth.role = 'ROLE_USER';
-                showToast(`Välkommen tillbaka, ${username}`, 'success');
-            } else {
-                throw new Error('Inloggning misslyckades');
-            }
+            state.auth.role = 'ROLE_USER';
+            showToast(`Välkommen tillbaka, ${username}`, 'success');
         }
 
         saveSession();
